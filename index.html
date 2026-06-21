@@ -550,6 +550,11 @@
     background: var(--bg-card);
     border-radius: 8px;
     font-size: 13px;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .history-row:active{
+    border-color: var(--line);
   }
   .history-row .hwho{
     font-weight: 700;
@@ -563,6 +568,15 @@
     color: var(--chalk-dim);
     font-weight: 600;
     font-size: 12px;
+  }
+  .history-row .hedit{
+    color: var(--chalk-dim);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-decoration-color: var(--line);
+    margin-left: 4px;
   }
   .history-empty{
     color: var(--chalk-dim);
@@ -677,10 +691,36 @@
     <div class="field">
       <label>Check-in history</label>
       <div class="history-list" id="historyList"></div>
+      <button class="add-card" id="addLogEntryBtn" style="margin-top:10px;">+ Add check-in</button>
     </div>
     <div class="sheet-actions">
       <button class="btn btn-danger" id="deletePassBtn">Delete pass</button>
       <button class="btn btn-secondary" id="closeDetailBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Check-in Log Entry Sheet -->
+<div class="overlay" id="logEntryOverlay">
+  <div class="sheet">
+    <h2 id="logEntryTitle">Add check-in</h2>
+    <div class="field">
+      <label>Who checked in?</label>
+      <div class="name-chips" id="logNameChips"></div>
+      <input type="text" id="logCustomName" placeholder="Type a name">
+    </div>
+    <div class="field">
+      <label>Date</label>
+      <input type="date" id="logDateInput">
+    </div>
+    <div class="field">
+      <label>Price for this visit</label>
+      <input type="number" id="logPriceInput" min="0">
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-danger" id="logDeleteBtn" style="display:none;">Delete</button>
+      <button class="btn btn-secondary" id="logCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="logSaveBtn">Save</button>
     </div>
   </div>
 </div>
@@ -1139,13 +1179,13 @@ function openDetail(id){
   if(pass.history.length === 0){
     historyList.innerHTML = `<div class="history-empty">No check-ins yet</div>`;
   } else {
-    historyList.innerHTML = pass.history.slice().reverse().map(h => `
-      <div class="history-row">
+    historyList.innerHTML = pass.history.map((h, idx) => `
+      <div class="history-row" data-action="log-edit" data-id="${pass.id}" data-index="${idx}">
         <span class="hwho">${h.who}</span>
-        <span class="hwhen">${fmtDate(h.date)}</span>
+        <span class="hwhen">${fmtDate(h.date)} <span class="hedit">edit</span></span>
         <span class="hprice">${h.price}</span>
       </div>
-    `).join('');
+    `).reverse().join('');
   }
   detailOverlay.classList.add('show');
 }
@@ -1161,6 +1201,145 @@ document.getElementById('deletePassBtn').addEventListener('click', () => {
   detailOverlay.classList.remove('show');
   render();
 });
+
+document.getElementById('historyList').addEventListener('click', (e) => {
+  const row = e.target.closest('[data-action="log-edit"]');
+  if(!row) return;
+  openEditLogEntry(row.dataset.id, parseInt(row.dataset.index, 10));
+});
+
+document.getElementById('addLogEntryBtn').addEventListener('click', () => {
+  openAddLogEntry(detailPassId);
+});
+
+// ---------- Add/Edit Check-in Log Entry Flow ----------
+const logEntryOverlay = document.getElementById('logEntryOverlay');
+const logNameChips = document.getElementById('logNameChips');
+const logCustomNameInput = document.getElementById('logCustomName');
+const logDateInput = document.getElementById('logDateInput');
+const logPriceInput = document.getElementById('logPriceInput');
+const logEntryTitle = document.getElementById('logEntryTitle');
+const logDeleteBtn = document.getElementById('logDeleteBtn');
+
+let logEntryPassId = null;
+let logEntryIndex = null; // null = adding a new entry, otherwise editing pass.history[index]
+let logSelectedName = 'Me';
+
+function renderLogNameChips(){
+  logNameChips.innerHTML = '';
+  knownNames.forEach(name => {
+    const chip = document.createElement('div');
+    chip.className = 'name-chip' + (name === logSelectedName ? ' selected' : '');
+    chip.textContent = name;
+    chip.addEventListener('click', () => {
+      logSelectedName = name;
+      logCustomNameInput.value = '';
+      renderLogNameChips();
+    });
+    logNameChips.appendChild(chip);
+  });
+}
+
+logCustomNameInput.addEventListener('input', () => {
+  if(logCustomNameInput.value.trim()){
+    logSelectedName = logCustomNameInput.value.trim();
+    document.querySelectorAll('#logNameChips .name-chip').forEach(c => c.classList.remove('selected'));
+  }
+});
+
+function openAddLogEntry(passId){
+  const pass = passes.find(p => p.id === passId);
+  if(!pass) return;
+  logEntryPassId = passId;
+  logEntryIndex = null;
+  logEntryTitle.textContent = 'Add check-in';
+  logDeleteBtn.style.display = 'none';
+  logSelectedName = 'Me';
+  logCustomNameInput.value = '';
+  logDateInput.value = todayISO();
+  logPriceInput.value = pass.pricePerVisit || '';
+  renderLogNameChips();
+  logEntryOverlay.classList.add('show');
+}
+
+function openEditLogEntry(passId, index){
+  const pass = passes.find(p => p.id === passId);
+  if(!pass) return;
+  const entry = pass.history[index];
+  if(!entry) return;
+  logEntryPassId = passId;
+  logEntryIndex = index;
+  logEntryTitle.textContent = 'Edit check-in';
+  logDeleteBtn.style.display = '';
+  logSelectedName = entry.who;
+  logCustomNameInput.value = '';
+  logDateInput.value = entry.date;
+  logPriceInput.value = entry.price;
+  renderLogNameChips();
+  logEntryOverlay.classList.add('show');
+}
+
+document.getElementById('logCancelBtn').addEventListener('click', () => {
+  logEntryOverlay.classList.remove('show');
+});
+
+document.getElementById('logSaveBtn').addEventListener('click', () => {
+  const pass = passes.find(p => p.id === logEntryPassId);
+  if(!pass) return;
+
+  const date = logDateInput.value;
+  if(!date){ alert('Set a date'); return; }
+  const price = parseFloat(logPriceInput.value) || 0;
+  const customName = logCustomNameInput.value.trim();
+  const who = customName || logSelectedName || 'Me';
+
+  if(!knownNames.includes(who)){
+    knownNames.push(who);
+    saveNames(knownNames);
+  }
+
+  if(logEntryIndex === null){
+    if(pass.history.length >= pass.totalVisits){
+      alert('This pass has no visits left to log. Edit an existing entry, or increase the visit count first.');
+      return;
+    }
+    pass.history.push({ date, who, price });
+  } else {
+    pass.history[logEntryIndex] = { date, who, price };
+  }
+
+  finishLogEntryChange(pass);
+});
+
+logDeleteBtn.addEventListener('click', () => {
+  const pass = passes.find(p => p.id === logEntryPassId);
+  if(!pass || logEntryIndex === null) return;
+  if(!confirm('Delete this check-in entry? This will also add the visit back to the pass.')) return;
+  pass.history.splice(logEntryIndex, 1);
+  finishLogEntryChange(pass);
+});
+
+function finishLogEntryChange(pass){
+  pass.visitsRemaining = Math.max(0, pass.totalVisits - pass.history.length);
+  savePasses(passes);
+  logEntryOverlay.classList.remove('show');
+
+  if(pass.visitsRemaining <= 0){
+    const removedPass = pass;
+    passes = passes.filter(p => p.id !== pass.id);
+    savePasses(passes);
+    detailOverlay.classList.remove('show');
+    render();
+    showToast(`${GYM_META[removedPass.gymId].name} pass used up — removed`, () => {
+      passes.push(removedPass);
+      savePasses(passes);
+      render();
+    });
+  } else {
+    render();
+    openDetail(pass.id);
+  }
+}
 
 // ---------- Expired confirm flow ----------
 const expiredOverlay = document.getElementById('expiredOverlay');
