@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1C1B1A">
+<title>My Passes</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="My Passes">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&display=swap');
+
+  :root{
+    --bg: #1C1B1A;
+    --bg-card: #242220;
+    --bg-sheet: #2A2826;
+    --chalk: #F2EFE9;
+    --chalk-dim: #A8A39A;
+    --line: #38352F;
+    --danger: #C24A3E;
+  }
+
+  *{ box-sizing: border-box; margin:0; padding:0; -webkit-tap-highlight-color: transparent; }
+
+  html, body{
+    background: var(--bg);
+    overscroll-behavior-y: none;
+  }
+
+  body{
+    color: var(--chalk);
+    font-family: 'Big Shoulders Display', sans-serif;
+    font-weight: 600;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 0;
+  }
+
+  #app{
+    width: 100%;
+    max-width: 480px;
+    min-height: 100vh;
+    position: relative;
+    padding-bottom: 110px;
+  }
+
+  header{
+    padding: 28px 20px 18px;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 5;
+  }
+
+  h1{
+    font-weight: 800;
+    font-size: 32px;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+  }
+
+  .backup-row{
+    display: flex;
+    gap: 14px;
+    margin-top: 10px;
+  }
+  .backup-btn{
+    background: transparent;
+    border: none;
+    color: var(--chalk-dim);
+    font-family: 'Big Shoulders Display', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-decoration: underline;
+    text-decoration-color: var(--line);
+    padding: 0;
+  }
+
+  main{
+    padding: 18px 16px 20px;
+    display:flex;
+    flex-direction:column;
+    gap: 14px;
+  }
+
+  .empty-state{
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--chalk-dim);
+  }
+  .empty-state .big{
+    font-size: 22px;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    color: var(--chalk);
+  }
+  .empty-state .small{
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .card{
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 18px 18px 16px;
+    border: 1px solid var(--line);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before{
+    content:"";
+    position:absolute;
+    top:0; left:0;
+    width: 4px;
+    height: 100%;
+    background: var(--accent);
+  }
+
+  .card.expired-flag{
+    border-color: var(--danger);
+  }
+  .card.expired-flag::before{
+    background: var(--danger);
+  }
+
+  .card-top{
+    display:flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+    gap: 8px;
+  }
+
+  .gym-name{
+    font-size: 20px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .loc-tag{
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--chalk-dim);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 1px 5px;
+    letter-spacing: 0.04em;
+  }
+  .gym-sub{
+    font-size: 12px;
+    color: var(--chalk-dim);
+    margin-top: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+
+  .visits-left{
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .visits-left .count{
+    font-weight: 900;
+    font-size: 30px;
+    line-height: 1;
+    color: var(--accent);
+  }
+  .visits-left .of{
+    font-size: 11px;
+    color: var(--chalk-dim);
+    margin-top: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+
+  .holds{
+    display:flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .hold{
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: transparent;
+    border: 1.5px solid var(--line);
+    flex-shrink:0;
+  }
+  .hold.filled{
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .card-bottom{
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    gap: 10px;
+  }
+
+  .exp-line{
+    font-size: 12px;
+    color: var(--chalk-dim);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  .edit-hint{
+    color: var(--chalk-dim);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: var(--line);
+    cursor: pointer;
+  }
+
+  .checkin-btn{
+    background: var(--accent);
+    color: var(--bg);
+    border: 2px solid var(--accent);
+    border-radius: 9px;
+    padding: 9px 16px;
+    font-family: 'Big Shoulders Display', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .checkin-btn:active{ transform: scale(0.97); }
+
+  .expired-row{
+    display:flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+  }
+  .expired-pill{
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    border-radius: 5px;
+    padding: 2px 6px;
+  }
+  .expired-action{
+    background: transparent;
+    color: var(--danger);
+    border: none;
+    font-family: 'Big Shoulders Display', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    text-decoration: underline;
+  }
+
+  .low-flag{
+    display:inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 5px;
+    padding: 2px 6px;
+    margin-top: 8px;
+  }
+
+  .add-card{
+    border: 1px dashed var(--line);
+    background: transparent;
+    border-radius: 14px;
+    padding: 22px;
+    text-align:center;
+    color: var(--chalk-dim);
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    width: 100%;
+    font-family: 'Big Shoulders Display', sans-serif;
+  }
+  .add-card:active{ background: var(--bg-card); }
+
+  /* ---- Bottom sheet / modal ---- */
+  .overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 50;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .overlay.show{ display: flex; }
+
+  .sheet{
+    background: var(--bg-sheet);
+    width: 100%;
+    max-width: 480px;
+    border-radius: 20px 20px 0 0;
+    padding: 22px 20px calc(24px + env(safe-area-inset-bottom));
+    max-height: 88vh;
+    overflow-y: auto;
+    animation: slideUp 0.22s ease-out;
+  }
+  @keyframes slideUp{
+    from{ transform: translateY(30px); opacity: 0; }
+    to{ transform: translateY(0); opacity: 1; }
+  }
+
+  .sheet h2{
+    font-size: 22px;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+    letter-spacing: 0.01em;
+  }
+
+  .field{
+    margin-bottom: 16px;
+  }
+  .field label{
+    display:block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--chalk-dim);
+    margin-bottom: 7px;
+  }
+
+  .gym-choices{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .gym-choice{
+    border: 2px solid var(--line);
+    background: var(--bg-card);
+    border-radius: 10px;
+    padding: 12px 10px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    color: var(--chalk);
+  }
+  .gym-choice.selected{
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 18%, var(--bg-card));
+  }
+
+  .visit-choices{
+    display:flex;
+    gap: 8px;
+  }
+  .visit-choice{
+    flex: 1;
+    border: 2px solid var(--line);
+    background: var(--bg-card);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--chalk);
+  }
+  .visit-choice.selected{
+    border-color: var(--chalk);
+    background: var(--line);
+  }
+
+  input[type="text"], input[type="number"], input[type="date"]{
+    width: 100%;
+    background: var(--bg-card);
+    border: 2px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--chalk);
+    font-family: 'Big Shoulders Display', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+  }
+  input:focus{ outline: none; border-color: var(--chalk-dim); }
+
+  .name-chips{
+    display:flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .name-chip{
+    border: 2px solid var(--line);
+    background: var(--bg-card);
+    border-radius: 20px;
+    padding: 7px 14px;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    color: var(--chalk);
+  }
+  .name-chip.selected{
+    border-color: var(--chalk);
+    background: var(--line);
+  }
+
+  .sheet-actions{
+    display:flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .btn{
+    flex: 1;
+    padding: 14px;
+    border-radius: 10px;
+    font-family: 'Big Shoulders Display', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    border: 2px solid transparent;
+  }
+  .btn-primary{
+    background: var(--chalk);
+    color: var(--bg);
+  }
+  .btn-secondary{
+    background: transparent;
+    color: var(--chalk-dim);
+    border-color: var(--line);
+  }
+  .btn-danger{
+    background: var(--danger);
+    color: var(--chalk);
+  }
+  .btn:active{ transform: scale(0.97); }
+
+  .price-hint{
+    font-size: 12px;
+    color: var(--chalk-dim);
+    margin-top: 6px;
+    font-weight: 600;
+  }
+
+  /* Toast / undo */
+  .toast{
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--chalk);
+    color: var(--bg);
+    padding: 13px 16px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    z-index: 60;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    width: calc(100% - 40px);
+    max-width: 400px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .toast span{
+    flex: 1;
+    line-height: 1.3;
+  }
+  .toast.show{
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+  }
+  .toast button{
+    background: transparent;
+    border: none;
+    color: var(--bg);
+    font-weight: 800;
+    text-transform: uppercase;
+    text-decoration: underline;
+    font-family: 'Big Shoulders Display', sans-serif;
+    font-size: 14px;
+  }
+
+  .fab-wrap{
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+    background: linear-gradient(to top, var(--bg) 60%, transparent);
+    z-index: 4;
+    pointer-events: none;
+  }
+  .fab{
+    pointer-events: auto;
+    width: 100%;
+    max-width: 448px;
+    background: var(--chalk);
+    color: var(--bg);
+    border: none;
+    border-radius: 12px;
+    padding: 15px;
+    font-family: 'Big Shoulders Display', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .fab:active{ transform: scale(0.98); }
+
+  .history-list{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .history-row{
+    display:flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: var(--bg-card);
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .history-row .hwho{
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .history-row .hwhen{
+    color: var(--chalk-dim);
+    font-weight: 600;
+  }
+  .history-row .hprice{
+    color: var(--chalk-dim);
+    font-weight: 600;
+    font-size: 12px;
+  }
+  .history-empty{
+    color: var(--chalk-dim);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    padding: 16px 0;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>My Passes</h1>
+    <div class="backup-row">
+      <button class="backup-btn" id="exportBtn">Export backup</button>
+      <button class="backup-btn" id="importBtn">Import backup</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none;">
+    </div>
+  </header>
+  <main id="cardList"></main>
+
+  <div class="fab-wrap">
+    <button class="fab" id="openAddBtn">+ Add a new pass</button>
+  </div>
+</div>
+
+<!-- Add Pass Sheet -->
+<div class="overlay" id="addOverlay">
+  <div class="sheet">
+    <h2>Add a pass</h2>
+
+    <div class="field">
+      <label>Gym</label>
+      <div class="gym-choices" id="gymChoices">
+        <div class="gym-choice" data-gym="stonegoat">Stonegoat</div>
+        <div class="gym-choice" data-gym="stonegoat-parq">Stonegoat Parq</div>
+        <div class="gym-choice" data-gym="balance">Balance</div>
+        <div class="gym-choice" data-gym="balance-prime">Balance Prime</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Visit count</label>
+      <div class="visit-choices" id="visitChoices">
+        <div class="visit-choice" data-visits="5">5</div>
+        <div class="visit-choice" data-visits="10">10</div>
+        <div class="visit-choice" data-visits="custom">Custom</div>
+      </div>
+      <input type="number" id="customVisits" placeholder="Number of visits" style="margin-top:8px; display:none;" min="1">
+    </div>
+
+    <div class="field">
+      <label>Start date</label>
+      <input type="date" id="startDate">
+    </div>
+
+    <div class="field">
+      <label>Expiry date (auto, editable)</label>
+      <input type="date" id="expiryDate">
+    </div>
+
+    <div class="field">
+      <label>Price paid</label>
+      <input type="number" id="pricePaid" placeholder="e.g. 2100" min="0">
+      <div class="price-hint" id="priceHint"></div>
+    </div>
+
+    <div class="sheet-actions">
+      <button class="btn btn-secondary" id="cancelAddBtn">Cancel</button>
+      <button class="btn btn-primary" id="confirmAddBtn">Add pass</button>
+    </div>
+  </div>
+</div>
+
+<!-- Check-in Sheet -->
+<div class="overlay" id="checkinOverlay">
+  <div class="sheet">
+    <h2 id="checkinTitle">Check in?</h2>
+    <div class="field">
+      <label>Who's checking in?</label>
+      <div class="name-chips" id="nameChips"></div>
+      <input type="text" id="customName" placeholder="Type a name">
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-secondary" id="cancelCheckinBtn">Cancel</button>
+      <button class="btn btn-primary" id="confirmCheckinBtn">Check in</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Expiry Sheet -->
+<div class="overlay" id="editOverlay">
+  <div class="sheet">
+    <h2>Edit expiry date</h2>
+    <div class="field">
+      <label>New expiry date</label>
+      <input type="date" id="editExpiryInput">
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-secondary" id="cancelEditBtn">Cancel</button>
+      <button class="btn btn-primary" id="confirmEditBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Card detail / history Sheet -->
+<div class="overlay" id="detailOverlay">
+  <div class="sheet">
+    <h2 id="detailTitle">Pass details</h2>
+    <div id="detailMeta" style="margin-bottom:14px; color: var(--chalk-dim); font-size:13px; font-weight:600;"></div>
+    <div class="field">
+      <label>Check-in history</label>
+      <div class="history-list" id="historyList"></div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-danger" id="deletePassBtn">Delete pass</button>
+      <button class="btn btn-secondary" id="closeDetailBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Expired confirm sheet -->
+<div class="overlay" id="expiredOverlay">
+  <div class="sheet">
+    <h2>This pass is expired</h2>
+    <p style="color:var(--chalk-dim); font-weight:600; font-size:14px; margin-bottom:18px;" id="expiredText"></p>
+    <div class="sheet-actions">
+      <button class="btn btn-secondary" id="keepExpiredBtn">Keep it</button>
+      <button class="btn btn-danger" id="deleteExpiredBtn">Delete pass</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span id="toastMsg"></span>
+  <button id="toastUndo">Undo</button>
+</div>
+
+<script>
+// ---------- Data layer ----------
+const GYM_META = {
+  'stonegoat':        { name: 'Stonegoat',       tag: 'S69',  color: '#D9633F' },
+  'stonegoat-parq':    { name: 'Stonegoat',       tag: 'PARQ', color: '#D9633F' },
+  'balance':           { name: 'Balance',         tag: '',     color: '#81c0bb' },
+  'balance-prime':     { name: 'Balance Prime',   tag: '',     color: '#C22E70' },
+};
+
+const STORAGE_KEY = 'climbing_passes_v1';
+const NAMES_KEY = 'climbing_names_v1';
+const LAST_AUTO_BACKUP_KEY = 'climbing_last_autobackup_v1';
+
+function loadPasses(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+function savePasses(passes){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(passes));
+  maybeAutoBackup();
+}
+function loadNames(){
+  try{
+    const raw = localStorage.getItem(NAMES_KEY);
+    return raw ? JSON.parse(raw) : ['Me'];
+  }catch(e){ return ['Me']; }
+}
+function saveNames(names){
+  localStorage.setItem(NAMES_KEY, JSON.stringify(names));
+}
+
+// Auto-backup: after any change to passes, silently download a fresh
+// backup file — but throttled to once per day so check-ins don't spam downloads.
+function maybeAutoBackup(){
+  const last = localStorage.getItem(LAST_AUTO_BACKUP_KEY);
+  const today = todayISO();
+  if(last === today) return;
+  localStorage.setItem(LAST_AUTO_BACKUP_KEY, today);
+  // Defer slightly so this never blocks the UI update that triggered it.
+  setTimeout(() => exportBackup(true), 300);
+}
+
+let passes = loadPasses();
+let knownNames = loadNames();
+
+function uid(){ return 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
+
+function fmtDate(d){
+  const dt = new Date(d + 'T00:00:00');
+  const dd = String(dt.getDate()).padStart(2,'0');
+  const mm = String(dt.getMonth()+1).padStart(2,'0');
+  const yy = String(dt.getFullYear()).slice(-2);
+  return `${dd}/${mm}/${yy}`;
+}
+
+function todayISO(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function addMonths(iso, months){
+  const d = new Date(iso + 'T00:00:00');
+  d.setMonth(d.getMonth() + months);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function isExpired(pass){
+  return pass.expiryDate < todayISO();
+}
+
+// ---------- Backup: export / import ----------
+function exportBackup(isAuto){
+  const data = {
+    exportedAt: new Date().toISOString(),
+    passes: loadPasses(),
+    names: loadNames()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStamp = todayISO();
+  a.href = url;
+  a.download = isAuto
+    ? `my-passes-autobackup-${dateStamp}.json`
+    : `my-passes-backup-${dateStamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  if(isAuto){
+    showToast('Backup auto-saved to your downloads');
+  }
+}
+
+function importBackup(file){
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!Array.isArray(data.passes)) throw new Error('Invalid backup file');
+
+      const proceed = confirm(
+        `This backup has ${data.passes.length} pass(es) from ${data.exportedAt ? fmtDate(data.exportedAt.slice(0,10)) : 'an unknown date'}.\n\nImporting will REPLACE your current data. Continue?`
+      );
+      if(!proceed) return;
+
+      savePasses(data.passes);
+      if(Array.isArray(data.names)) saveNames(data.names);
+
+      render();
+      knownNames = loadNames();
+      alert('Backup restored.');
+    }catch(err){
+      alert('Could not read this backup file. Make sure it\'s a JSON file exported from this app.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+document.getElementById('exportBtn').addEventListener('click', () => exportBackup(false));
+
+const importFileInput = document.getElementById('importFile');
+document.getElementById('importBtn').addEventListener('click', () => {
+  importFileInput.click();
+});
+importFileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(file) importBackup(file);
+  importFileInput.value = '';
+});
+
+// ---------- Rendering ----------
+const cardList = document.getElementById('cardList');
+
+function render(){
+  passes = loadPasses();
+  cardList.innerHTML = '';
+
+  if(passes.length === 0){
+    cardList.innerHTML = `
+      <div class="empty-state">
+        <div class="big">No passes yet</div>
+        <div class="small">Tap "Add a new pass" below to get started.</div>
+      </div>`;
+    return;
+  }
+
+  passes.forEach(pass => {
+    const meta = GYM_META[pass.gymId];
+    const expired = isExpired(pass);
+    const card = document.createElement('div');
+    card.className = 'card' + (expired ? ' expired-flag' : '');
+    card.style.setProperty('--accent', meta.color);
+
+    const dots = Array.from({length: pass.totalVisits}, (_, i) => {
+      const filled = i < pass.visitsRemaining;
+      return `<div class="hold ${filled ? 'filled' : ''}"></div>`;
+    }).join('');
+
+    const lowFlag = (pass.visitsRemaining <= 1 && pass.visitsRemaining > 0)
+      ? `<span class="low-flag">${pass.visitsRemaining} visit${pass.visitsRemaining===1?'':'s'} left</span>`
+      : '';
+
+    const expiredRow = expired ? `
+      <div class="expired-row">
+        <span class="expired-pill">Expired</span>
+        <button class="expired-action" data-action="expired-resolve" data-id="${pass.id}">Resolve</button>
+      </div>` : '';
+
+    card.innerHTML = `
+      <div class="card-top" data-action="detail" data-id="${pass.id}">
+        <div>
+          <div class="gym-name">${meta.name} ${meta.tag ? `<span class="loc-tag">${meta.tag}</span>` : ''}</div>
+          <div class="gym-sub">${pass.totalVisits}-visit pass</div>
+        </div>
+        <div class="visits-left">
+          <div class="count">${pass.visitsRemaining}</div>
+          <div class="of">of ${pass.totalVisits} left</div>
+        </div>
+      </div>
+      <div class="holds">${dots}</div>
+      <div class="card-bottom">
+        <div class="exp-line">Exp ${fmtDate(pass.expiryDate)} · <span class="edit-hint" data-action="edit" data-id="${pass.id}">edit</span></div>
+        <button class="checkin-btn" data-action="checkin" data-id="${pass.id}">Check in</button>
+      </div>
+      ${lowFlag}
+      ${expiredRow}
+    `;
+    cardList.appendChild(card);
+  });
+}
+
+// ---------- Event delegation ----------
+cardList.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-action]');
+  if(!t) return;
+  const action = t.dataset.action;
+  const id = t.dataset.id;
+
+  if(action === 'checkin') openCheckin(id);
+  else if(action === 'edit') openEdit(id);
+  else if(action === 'detail') openDetail(id);
+  else if(action === 'expired-resolve') openExpiredConfirm(id);
+});
+
+// ---------- Add Pass Flow ----------
+const addOverlay = document.getElementById('addOverlay');
+const gymChoices = document.getElementById('gymChoices');
+const visitChoices = document.getElementById('visitChoices');
+const customVisitsInput = document.getElementById('customVisits');
+const startDateInput = document.getElementById('startDate');
+const expiryDateInput = document.getElementById('expiryDate');
+const pricePaidInput = document.getElementById('pricePaid');
+const priceHint = document.getElementById('priceHint');
+
+let selectedGym = null;
+let selectedVisits = null;
+let expiryManuallyEdited = false;
+
+document.getElementById('openAddBtn').addEventListener('click', () => {
+  selectedGym = null;
+  selectedVisits = null;
+  expiryManuallyEdited = false;
+  document.querySelectorAll('.gym-choice').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.visit-choice').forEach(el => el.classList.remove('selected'));
+  customVisitsInput.style.display = 'none';
+  customVisitsInput.value = '';
+  pricePaidInput.value = '';
+  priceHint.textContent = '';
+  startDateInput.value = todayISO();
+  expiryDateInput.value = '';
+  addOverlay.classList.add('show');
+});
+
+document.getElementById('cancelAddBtn').addEventListener('click', () => {
+  addOverlay.classList.remove('show');
+});
+
+gymChoices.addEventListener('click', (e) => {
+  const el = e.target.closest('.gym-choice');
+  if(!el) return;
+  document.querySelectorAll('.gym-choice').forEach(x => x.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedGym = el.dataset.gym;
+});
+
+function recalcExpiry(){
+  if(expiryManuallyEdited) return;
+  if(!selectedVisits || !startDateInput.value) return;
+  const months = selectedVisits == 5 ? 3 : selectedVisits == 10 ? 6 : 3;
+  expiryDateInput.value = addMonths(startDateInput.value, months);
+}
+
+visitChoices.addEventListener('click', (e) => {
+  const el = e.target.closest('.visit-choice');
+  if(!el) return;
+  document.querySelectorAll('.visit-choice').forEach(x => x.classList.remove('selected'));
+  el.classList.add('selected');
+  if(el.dataset.visits === 'custom'){
+    customVisitsInput.style.display = 'block';
+    customVisitsInput.focus();
+    selectedVisits = parseInt(customVisitsInput.value) || null;
+  } else {
+    customVisitsInput.style.display = 'none';
+    selectedVisits = parseInt(el.dataset.visits);
+  }
+  recalcExpiry();
+  updatePriceHint();
+});
+
+customVisitsInput.addEventListener('input', () => {
+  selectedVisits = parseInt(customVisitsInput.value) || null;
+  recalcExpiry();
+  updatePriceHint();
+});
+
+startDateInput.addEventListener('change', recalcExpiry);
+expiryDateInput.addEventListener('input', () => { expiryManuallyEdited = true; });
+
+function updatePriceHint(){
+  const price = parseFloat(pricePaidInput.value);
+  if(price && selectedVisits){
+    priceHint.textContent = `≈ ${(price/selectedVisits).toFixed(0)} per visit`;
+  } else {
+    priceHint.textContent = '';
+  }
+}
+pricePaidInput.addEventListener('input', updatePriceHint);
+
+document.getElementById('confirmAddBtn').addEventListener('click', () => {
+  if(!selectedGym){ alert('Pick a gym'); return; }
+  if(!selectedVisits || selectedVisits < 1){ alert('Set a visit count'); return; }
+  if(!startDateInput.value){ alert('Set a start date'); return; }
+  if(!expiryDateInput.value){ alert('Set an expiry date'); return; }
+
+  const price = parseFloat(pricePaidInput.value) || 0;
+
+  const newPass = {
+    id: uid(),
+    gymId: selectedGym,
+    totalVisits: selectedVisits,
+    visitsRemaining: selectedVisits,
+    startDate: startDateInput.value,
+    expiryDate: expiryDateInput.value,
+    pricePaid: price,
+    pricePerVisit: selectedVisits ? +(price / selectedVisits).toFixed(2) : 0,
+    history: []
+  };
+
+  passes.push(newPass);
+  savePasses(passes);
+  addOverlay.classList.remove('show');
+  render();
+});
+
+// ---------- Check-in Flow ----------
+const checkinOverlay = document.getElementById('checkinOverlay');
+const nameChips = document.getElementById('nameChips');
+const customNameInput = document.getElementById('customName');
+let checkinPassId = null;
+let selectedName = 'Me';
+
+function openCheckin(id){
+  checkinPassId = id;
+  const pass = passes.find(p => p.id === id);
+  const meta = GYM_META[pass.gymId];
+  document.getElementById('checkinTitle').textContent = `Check in at ${meta.name}${meta.tag ? ' '+meta.tag : ''}?`;
+  selectedName = 'Me';
+  customNameInput.value = '';
+  renderNameChips();
+  checkinOverlay.classList.add('show');
+}
+
+function renderNameChips(){
+  nameChips.innerHTML = '';
+  knownNames.forEach(name => {
+    const chip = document.createElement('div');
+    chip.className = 'name-chip' + (name === selectedName ? ' selected' : '');
+    chip.textContent = name;
+    chip.addEventListener('click', () => {
+      selectedName = name;
+      customNameInput.value = '';
+      renderNameChips();
+    });
+    nameChips.appendChild(chip);
+  });
+}
+
+customNameInput.addEventListener('input', () => {
+  if(customNameInput.value.trim()){
+    selectedName = customNameInput.value.trim();
+    document.querySelectorAll('.name-chip').forEach(c => c.classList.remove('selected'));
+  }
+});
+
+document.getElementById('cancelCheckinBtn').addEventListener('click', () => {
+  checkinOverlay.classList.remove('show');
+});
+
+document.getElementById('confirmCheckinBtn').addEventListener('click', () => {
+  const pass = passes.find(p => p.id === checkinPassId);
+  if(!pass) return;
+
+  const name = customNameInput.value.trim() || selectedName || 'Me';
+  if(!knownNames.includes(name)){
+    knownNames.push(name);
+    saveNames(knownNames);
+  }
+
+  pass.visitsRemaining -= 1;
+  pass.history.push({
+    date: todayISO(),
+    who: name,
+    price: pass.pricePerVisit
+  });
+
+  checkinOverlay.classList.remove('show');
+
+  if(pass.visitsRemaining <= 0){
+    passes = passes.filter(p => p.id !== pass.id);
+    savePasses(passes);
+    render();
+    showToast(`${GYM_META[pass.gymId].name} pass used up — removed`, () => {
+      passes.push(pass);
+      savePasses(passes);
+      render();
+    });
+  } else {
+    savePasses(passes);
+    render();
+  }
+});
+
+// ---------- Edit Expiry Flow ----------
+const editOverlay = document.getElementById('editOverlay');
+const editExpiryInput = document.getElementById('editExpiryInput');
+let editPassId = null;
+
+function openEdit(id){
+  editPassId = id;
+  const pass = passes.find(p => p.id === id);
+  editExpiryInput.value = pass.expiryDate;
+  editOverlay.classList.add('show');
+}
+
+document.getElementById('cancelEditBtn').addEventListener('click', () => {
+  editOverlay.classList.remove('show');
+});
+
+document.getElementById('confirmEditBtn').addEventListener('click', () => {
+  const pass = passes.find(p => p.id === editPassId);
+  if(pass && editExpiryInput.value){
+    pass.expiryDate = editExpiryInput.value;
+    savePasses(passes);
+  }
+  editOverlay.classList.remove('show');
+  render();
+});
+
+// ---------- Detail / History Flow ----------
+const detailOverlay = document.getElementById('detailOverlay');
+let detailPassId = null;
+
+function openDetail(id){
+  detailPassId = id;
+  const pass = passes.find(p => p.id === id);
+  const meta = GYM_META[pass.gymId];
+  document.getElementById('detailTitle').textContent = `${meta.name}${meta.tag ? ' '+meta.tag : ''}`;
+  document.getElementById('detailMeta').textContent =
+    `Started ${fmtDate(pass.startDate)} · Paid ${pass.pricePaid} (${pass.pricePerVisit}/visit)`;
+
+  const historyList = document.getElementById('historyList');
+  if(pass.history.length === 0){
+    historyList.innerHTML = `<div class="history-empty">No check-ins yet</div>`;
+  } else {
+    historyList.innerHTML = pass.history.slice().reverse().map(h => `
+      <div class="history-row">
+        <span class="hwho">${h.who}</span>
+        <span class="hwhen">${fmtDate(h.date)}</span>
+        <span class="hprice">${h.price}</span>
+      </div>
+    `).join('');
+  }
+  detailOverlay.classList.add('show');
+}
+
+document.getElementById('closeDetailBtn').addEventListener('click', () => {
+  detailOverlay.classList.remove('show');
+});
+
+document.getElementById('deletePassBtn').addEventListener('click', () => {
+  if(!confirm('Delete this pass? This cannot be undone.')) return;
+  passes = passes.filter(p => p.id !== detailPassId);
+  savePasses(passes);
+  detailOverlay.classList.remove('show');
+  render();
+});
+
+// ---------- Expired confirm flow ----------
+const expiredOverlay = document.getElementById('expiredOverlay');
+let expiredPassId = null;
+
+function openExpiredConfirm(id){
+  expiredPassId = id;
+  const pass = passes.find(p => p.id === id);
+  const meta = GYM_META[pass.gymId];
+  document.getElementById('expiredText').textContent =
+    `${meta.name}${meta.tag ? ' '+meta.tag : ''} expired on ${fmtDate(pass.expiryDate)} but still has ${pass.visitsRemaining} visit(s) left. Delete it, or keep it as is?`;
+  expiredOverlay.classList.add('show');
+}
+
+document.getElementById('keepExpiredBtn').addEventListener('click', () => {
+  expiredOverlay.classList.remove('show');
+});
+
+document.getElementById('deleteExpiredBtn').addEventListener('click', () => {
+  passes = passes.filter(p => p.id !== expiredPassId);
+  savePasses(passes);
+  expiredOverlay.classList.remove('show');
+  render();
+});
+
+// ---------- Toast / undo ----------
+const toast = document.getElementById('toast');
+const toastMsg = document.getElementById('toastMsg');
+const toastUndo = document.getElementById('toastUndo');
+let toastTimer = null;
+
+function showToast(msg, onUndo){
+  toastMsg.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  if(onUndo){
+    toastUndo.style.display = '';
+    toastUndo.textContent = 'Undo';
+    toastUndo.onclick = () => {
+      clearTimeout(toastTimer);
+      toast.classList.remove('show');
+      onUndo();
+    };
+  } else {
+    toastUndo.style.display = 'none';
+    toastUndo.onclick = null;
+  }
+  toastTimer = setTimeout(() => {
+    toast.classList.remove('show');
+  }, 5000);
+}
+
+// ---------- Close overlays on backdrop click ----------
+document.querySelectorAll('.overlay').forEach(ov => {
+  ov.addEventListener('click', (e) => {
+    if(e.target === ov) ov.classList.remove('show');
+  });
+});
+
+// ---------- Service worker ----------
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+// ---------- Init ----------
+render();
+</script>
+</body>
+</html>
