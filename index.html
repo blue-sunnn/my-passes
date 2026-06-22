@@ -570,14 +570,40 @@
     font-size: 12px;
   }
   .history-row .hedit{
+    display: none;
+  }
+
+  .edit-log-btn{
+    background: transparent;
+    border: none;
     color: var(--chalk-dim);
-    font-weight: 600;
-    font-size: 11px;
+    font-family: 'Big Shoulders Display', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
     text-transform: uppercase;
+    letter-spacing: 0.04em;
     text-decoration: underline;
     text-decoration-color: var(--line);
-    margin-left: 4px;
+    padding: 0;
+    cursor: pointer;
+    flex-shrink: 0;
   }
+
+  .row-edit-btn{
+    background: var(--line);
+    border: none;
+    color: var(--chalk-dim);
+    font-family: 'Big Shoulders Display', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-radius: 5px;
+    padding: 4px 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .row-edit-btn:active{ opacity: 0.7; }
   .history-empty{
     color: var(--chalk-dim);
     font-size: 13px;
@@ -926,7 +952,10 @@ function render(){
       </div>
       <div class="holds">${dots}</div>
       <div class="card-bottom">
-        <div class="exp-line">Exp ${fmtDate(pass.expiryDate)} · <span class="edit-hint" data-action="edit" data-id="${pass.id}">edit</span></div>
+        <div>
+          <div class="exp-line">Exp ${fmtDate(pass.expiryDate)} · <span class="edit-hint" data-action="edit" data-id="${pass.id}">edit</span></div>
+          ${pass.history.length > 0 ? `<button class="edit-log-btn" data-action="detail" data-id="${pass.id}" style="margin-top:5px;">Edit log (${pass.history.length})</button>` : ''}
+        </div>
         <button class="checkin-btn" data-action="checkin" data-id="${pass.id}">Check in</button>
       </div>
       ${lowFlag}
@@ -1187,9 +1216,10 @@ function openDetail(id){
       row.className = 'history-row';
       row.innerHTML =
         '<span class="hwho">' + h.who + '</span>' +
-        '<span class="hwhen">' + fmtDate(h.date) + ' <span class="hedit">edit</span></span>' +
-        '<span class="hprice">' + h.price + '</span>';
-      row.addEventListener('click', (function(pid, i){ return function(){ openEditLogEntry(pid, i); }; })(pass.id, idx));
+        '<span class="hwhen">' + fmtDate(h.date) + '</span>' +
+        '<span class="hprice">' + h.price + '</span>' +
+        '<button class="row-edit-btn">Edit</button>';
+      row.querySelector('.row-edit-btn').addEventListener('click', (function(pid, i){ return function(e){ e.stopPropagation(); openEditLogEntry(pid, i); }; })(pass.id, idx));
       historyList.appendChild(row);
     });
   }
