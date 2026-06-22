@@ -701,7 +701,7 @@
 </div>
 
 <!-- Add/Edit Check-in Log Entry Sheet -->
-<div class="overlay" id="logEntryOverlay">
+<div class="overlay" id="logEntryOverlay" style="z-index:55;">
   <div class="sheet">
     <h2 id="logEntryTitle">Add check-in</h2>
     <div class="field">
@@ -1177,15 +1177,21 @@ function openDetail(id){
 
   const historyList = document.getElementById('historyList');
   if(pass.history.length === 0){
-    historyList.innerHTML = `<div class="history-empty">No check-ins yet</div>`;
+    historyList.innerHTML = '<div class="history-empty">No check-ins yet</div>';
   } else {
-    historyList.innerHTML = pass.history.map((h, idx) => `
-      <div class="history-row" data-action="log-edit" data-id="${pass.id}" data-index="${idx}">
-        <span class="hwho">${h.who}</span>
-        <span class="hwhen">${fmtDate(h.date)} <span class="hedit">edit</span></span>
-        <span class="hprice">${h.price}</span>
-      </div>
-    `).reverse().join('');
+    historyList.innerHTML = '';
+    const indices = pass.history.map((_, i) => i).reverse();
+    indices.forEach(idx => {
+      const h = pass.history[idx];
+      const row = document.createElement('div');
+      row.className = 'history-row';
+      row.innerHTML =
+        '<span class="hwho">' + h.who + '</span>' +
+        '<span class="hwhen">' + fmtDate(h.date) + ' <span class="hedit">edit</span></span>' +
+        '<span class="hprice">' + h.price + '</span>';
+      row.addEventListener('click', (function(pid, i){ return function(){ openEditLogEntry(pid, i); }; })(pass.id, idx));
+      historyList.appendChild(row);
+    });
   }
   detailOverlay.classList.add('show');
 }
@@ -1200,12 +1206,6 @@ document.getElementById('deletePassBtn').addEventListener('click', () => {
   savePasses(passes);
   detailOverlay.classList.remove('show');
   render();
-});
-
-document.getElementById('historyList').addEventListener('click', (e) => {
-  const row = e.target.closest('[data-action="log-edit"]');
-  if(!row) return;
-  openEditLogEntry(row.dataset.id, parseInt(row.dataset.index, 10));
 });
 
 document.getElementById('addLogEntryBtn').addEventListener('click', () => {
